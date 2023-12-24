@@ -1,6 +1,7 @@
 package com.sirma.employees.controllers;
 
 import com.sirma.employees.models.dtos.EmployeePairDTO;
+import com.sirma.employees.models.dtos.EmployeePairsWithProjectsDTO;
 import com.sirma.employees.services.FileIOService;
 import com.sirma.employees.services.FileProcessingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -94,7 +95,7 @@ public class FileProcessingController {
 
     @PostMapping("/processSelectedFile")
     public String processSelectedFile(@RequestParam("selectedFile") String selectedFile, Model model) {
-        EmployeePairDTO topPair = fileProcessing.processFile(selectedFile);
+        EmployeePairsWithProjectsDTO topPair = fileProcessing.processFile(selectedFile);
 
         model.addAttribute("result", topPair.toString());
         model.addAttribute("message", "Selected File: " + selectedFile);

@@ -1,8 +1,9 @@
 package com.sirma.employees.services;
 
+import com.sirma.employees.models.dtos.CommonProjectDTO;
 import com.sirma.employees.models.dtos.EmployeePairDTO;
+import com.sirma.employees.models.dtos.EmployeePairsWithProjectsDTO;
 import com.sirma.employees.models.dtos.EmployeeProjectDTO;
-import org.springframework.cglib.core.Local;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +17,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @Service
 public class FileProcessingService {
@@ -24,11 +27,20 @@ public class FileProcessingService {
     private final List<EmployeeProjectDTO> employeeProjectList;
     private final ResourceLoader resourceLoader;
     private final List<EmployeePairDTO> employeePairs;
+    private ArrayList<CommonProjectDTO> commonProjects ;
+    private final List<EmployeePairsWithProjectsDTO> employeePairsWithProjects;
 
-    public FileProcessingService(FileIOService fileService, List<EmployeeProjectDTO> employeeProjectList, ResourceLoader resourceLoader) {
+    public FileProcessingService(
+            FileIOService fileService,
+            List<EmployeeProjectDTO> employeeProjectList,
+            ResourceLoader resourceLoader,
+            ArrayList<CommonProjectDTO> commonProjects,
+            List<EmployeePairsWithProjectsDTO> employeePairsWithProjects) {
         this.fileService = fileService;
         this.employeeProjectList = employeeProjectList;
         this.resourceLoader = resourceLoader;
+        this.commonProjects = commonProjects;
+        this.employeePairsWithProjects = employeePairsWithProjects;
         this.employeePairs = new ArrayList<>();
     }
 
@@ -70,7 +82,7 @@ public class FileProcessingService {
         throw new ParseException("Unsupported date format", 0);
     }
 
-    public EmployeePairDTO processFile(String fileName) {
+    public EmployeePairsWithProjectsDTO processFile(String fileName) {
         List<String> lines = new ArrayList<>();
 
         try {
@@ -149,7 +161,64 @@ public class FileProcessingService {
                                 var totalMonths = calculateTotalTimeOnProject(startOfOverlappingPeriod, endOfOverlappingPeriod);
 
                                 EmployeePairDTO employeePair = new EmployeePairDTO(baseEmployee.employeeId(), employeeToCompare.employeeId(), totalMonths);
-                                employeePairs.add(employeePair);
+
+                                CommonProjectDTO commonProject = new CommonProjectDTO(baseEmployee.projectId(), totalMonths);
+
+                                // Create predicate to check if any of the combinations of the two employees exist already in the collection
+                                Predicate<EmployeePairDTO> getExistingEmployeePair = e -> e.employeeOneId().equals(employeePair.employeeOneId()) && e.employeeTwoId().equals(employeePair.employeeTwoId())
+                                        || e.employeeOneId().equals(employeePair.employeeTwoId()) && e.employeeTwoId().equals(employeePair.employeeOneId());
+
+                                boolean containsEmployees = employeePairs.stream().anyMatch(getExistingEmployeePair);
+
+                                // Check if the collection contains the employee pair on another project and update their total months together
+                                if (containsEmployees) {
+                                    var existingEmployeePair = employeePairs.stream().filter(getExistingEmployeePair).findFirst();
+                                    existingEmployeePair.ifPresent(employeePairs::remove);
+                                    var existingTotalMonths = existingEmployeePair.map(EmployeePairDTO::getTotalMonths).orElse(null);
+                                    // Use the getOrDefault method to handle the potential null value
+                                    long existingTotalMonthsValue = existingTotalMonths != null ? existingTotalMonths : 0L;
+
+                                    EmployeePairDTO updatedEmployeePair = new EmployeePairDTO(
+                                            baseEmployee.employeeId(),
+                                            employeeToCompare.employeeId(),
+                                            totalMonths + existingTotalMonthsValue);
+
+                                    employeePairs.add(updatedEmployeePair);
+
+                                    ArrayList<CommonProjectDTO> existingCommonProjects = employeePairsWithProjects.stream()
+                                            .filter(e -> (e.employeePairDTO().employeeOneId() == baseEmployee.employeeId()
+                                                    && e.employeePairDTO().employeeTwoId() == employeeToCompare.employeeId()
+                                            || (e.employeePairDTO().employeeTwoId() == baseEmployee.employeeId()
+                                                    && e.employeePairDTO().employeeOneId() == employeeToCompare.employeeId())))
+                                            .flatMap(e -> e.getCommonProjects().stream())
+                                            .collect(Collectors.toCollection(ArrayList::new));;
+
+                                    commonProjects = existingCommonProjects;
+                                    commonProjects.add(commonProject);
+                                    Comparator<CommonProjectDTO> comparator =
+                                            Comparator.<CommonProjectDTO, Long>comparing(dto -> dto.projectId());
+                                    commonProjects.sort(comparator);
+                                    var employeeWithProjects = new EmployeePairsWithProjectsDTO(updatedEmployeePair, commonProjects);
+
+                                    employeePairsWithProjects.replaceAll(e -> {
+                                        if ((e.employeePairDTO().employeeOneId() == baseEmployee.employeeId() &&
+                                                e.employeePairDTO().employeeTwoId() == employeeToCompare.employeeId())
+                                            || (e.employeePairDTO().employeeTwoId() == baseEmployee.employeeId() &&
+                                                e.employeePairDTO().employeeOneId() == employeeToCompare.employeeId())){
+                                            return employeeWithProjects;
+                                        }
+                                        return e;
+                                    });
+                                } else {
+                                    employeePairs.add(employeePair);
+
+                                    commonProjects = new ArrayList<>();
+                                    commonProjects.add(commonProject);
+
+                                    var employeeWithProjects = new EmployeePairsWithProjectsDTO(employeePair, commonProjects);
+
+                                    employeePairsWithProjects.add(employeeWithProjects);
+                                }
                             }
                         }
                     }
@@ -160,15 +229,23 @@ public class FileProcessingService {
         }
 
         // Sort the list based on total months in descending order
-        employeePairs.sort(Comparator.comparingLong(EmployeePairDTO::totalMonths).reversed());
+        // Define a custom comparator based on totalMonths of employeePairDTO
+        Comparator<EmployeePairsWithProjectsDTO> comparator =
+                Comparator.<EmployeePairsWithProjectsDTO, Long>comparing(dto -> dto.getEmployeePair().getTotalMonths())
+                        .reversed();
 
-        return employeePairs.get(0);
+
+        // Sort the list using the custom comparator
+        employeePairsWithProjects.sort(comparator);
+
+        return employeePairsWithProjects.get(0);
     }
 
-    private Long calculateTotalTimeOnProject(LocalDate startOfOverlappingPeriod, LocalDate endOfOverlappingPeriod) {
-         var daysBetween = ChronoUnit.DAYS.between(startOfOverlappingPeriod, endOfOverlappingPeriod);
 
-        return Math.floorDiv(daysBetween,30);
+    private Long calculateTotalTimeOnProject(LocalDate startOfOverlappingPeriod, LocalDate endOfOverlappingPeriod) {
+        var daysBetween = ChronoUnit.DAYS.between(startOfOverlappingPeriod, endOfOverlappingPeriod);
+
+        return Math.floorDiv(daysBetween, 30);
     }
 
     private boolean areOverlapping(LocalDate start1, LocalDate end1, LocalDate start2, LocalDate end2) {

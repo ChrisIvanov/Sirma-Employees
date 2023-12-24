@@ -3,6 +3,7 @@ package com.sirma.employees.models;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name = "Employees")
 public class Employee {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
