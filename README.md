@@ -16,3 +16,4 @@ the date is automatically configured to TODAY.
 The main algorithm should be able to recognize different date formats from the CSV sheet, 
 and convert them to the international date format (ISO 8601) - big-endian (YYYY-MM-DD).
 
+Main content is in the master branch.
