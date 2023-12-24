@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Error</title>
+</head>
+<body>
+<h3>Something went wrong</h3>
+<ul>
+  <li>
+    <p>Select a file before sending a process request</p>
+  </li>
+  <li>
+    <p>Make sure that the date formats correspond to the following</p>
+    <ul>
+      <li>
+        <p>yyyy-MM-dd</p>
+      </li>
+      <li>
+        <p>MM/dd/yyyy</p>
+      </li>
+      <li>
+        <p>dd.MM.yyyy</p>
+      </li>
+      <li>
+        <p>dd-MMM-yyyy</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>The format of the CSV file row corresponds to EmpID, ProjId, DateFrom, DateTo</p>
+  </li>
+</ul>
+<a th:href="@{/}">
+  <button>Return home</button>
+</a>
+</body>
+</html>

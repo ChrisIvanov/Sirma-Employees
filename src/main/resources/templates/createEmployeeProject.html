@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Employee with Project</title>
+</head>
+<body>
+
+<h2>Add Employee with Project</h2>
+
+<form method="post" action="/employees/add-employee-project" th:object="${yourEntity}" th:action="@{/employees/add-employee-project}">
+  <!-- Employee ID -->
+  <label for="employeeId">Employee ID:</label>
+  <input type="text" id="employeeId" name="employeeId" th:field="*{employeeId}" required>
+  <br>
+
+  <!-- Project ID -->
+  <label for="projectId">Project ID:</label>
+  <input type="text" id="projectId" name="projectId" th:field="*{projectId}" required>
+  <br>
+
+  <!-- Date From -->
+  <label for="dateFrom">Date From:</label>
+  <input type="date" id="dateFrom" name="dateFrom" th:field="*{dateFrom}" required>
+  <br>
+
+  <!-- Date To -->
+  <label for="dateTo">Date To:</label>
+  <input type="date" id="dateTo" name="dateTo" th:field="*{dateTo}">
+  <br>
+
+  <!-- Submit Button -->
+  <button type="submit">Add Entity</button>
+</form>
+
+</body>
+</html>

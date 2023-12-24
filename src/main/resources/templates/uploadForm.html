@@ -1,0 +1,18 @@
+<!-- src/main/resources/templates/uploadForm.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload Form</title>
+</head>
+<body>
+<div id="uploadBox">
+    <h2>File Upload Form</h2>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".csv">
+        <button type="submit">Upload File</button>
+    </form>
+</div>
+</body>
+</html>

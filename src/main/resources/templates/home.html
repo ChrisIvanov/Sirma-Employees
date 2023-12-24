@@ -1,0 +1,24 @@
+<!-- src/main/resources/templates/home.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/home.css}" />
+    <title>Home Page</title>
+</head>
+<body>
+    <h1 th:text="${message}"></h1>
+
+    <div id="processEmployees">
+        <a th:href="@{/selectFileToProcess}">
+            <button>Choose a file to process</button>
+        </a>
+    </div>
+
+    <div id="add-employee-btn">
+        <a th:href="@{/createEmployeeProject}">
+            <button>Add new employee</button>
+        </a>
+    </div>
+</body>
+</html>
+

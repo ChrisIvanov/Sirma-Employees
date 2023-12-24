@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/selectFileToProcess.css}"/>
+    <script>
+        function checkSelection() {
+            // Get all radio buttons by name
+            var radioButtons = document.getElementsByName('selectedFile');
+
+            // Check if at least one radio button is selected
+            var isAnySelected = false;
+            for (var i = 0; i < radioButtons.length; i++) {
+                if (radioButtons[i].checked) {
+                    isAnySelected = true;
+                    break;
+                }
+            }
+
+            // Enable or disable the submit button based on the selection
+            var submitButton = document.getElementById('submitButton');
+            submitButton.disabled = !isAnySelected;
+        }
+    </script>
+</head>
+<body>
+<h1>Select a File</h1>
+<form method="post" action="/processSelectedFile">
+    <div id="existingFilesForm">
+        <ul>
+            <li th:each="file : ${uploadedFiles}">
+                <label>
+                    <input type="radio" name="selectedFile" th:value="${file}"/>
+                    <span th:text="${file}"></span>
+                </label>
+            </li>
+        </ul>
+    </div>
+    <button type="submit">Process Selected File</button>
+</form>
+
+<h3>Or upload a new file</h3>
+<div id="uploadRedirect">
+    <a th:href="@{/uploadForm}">
+        <button>Upload new</button>
+    </a>
+</div>
+</body>
+</html>

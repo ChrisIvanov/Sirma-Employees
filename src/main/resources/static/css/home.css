@@ -1,0 +1,12 @@
+#uploadBox {
+    border: 2px solid grey;
+    padding: 20px;
+    width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+}
+
+#processEmployees {
+    margin: 50px;
+}
